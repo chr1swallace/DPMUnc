@@ -1,5 +1,13 @@
 #!/usr/bin/Rscript
 
+#' @importFrom foreach %dopar% foreach
+#' @importFrom iterators icount
+#' @importFrom doParallel registerDoParallel
+#' @useDynLib DPMUnc
+#' @importFrom Rcpp evalCpp
+#' @importFrom coda mcmc as.mcmc.list
+NULL
+
 read_line_n <- function(filepath, nDim, n) {
   values = as.numeric(read.table(filepath, skip=n-1, nrow=1, sep=','))
   mat = matrix(values, ncol=nDim)
@@ -39,7 +47,6 @@ scale_data <- function(obsData, obsVars) {
                         center=FALSE,
                         # Scale the variances by the square of the scale factors we used for the data
                         scale=attr(scaledData, "scaled:scale") ** 2)
-
     return (list("data"=scaledData, "vars"=scaledVars))
 }
 
@@ -89,6 +96,7 @@ scale_data <- function(obsData, obsVars) {
 DPMUnc <- function(obsData,obsVars,saveFileDir,seed,
                    kappa0, alpha0, beta0,
                    K=if(is.vector(obsData)) { floor(length(obsData)/2) } else { floor(nrow(obsData)/2) },
+                   nChains=3, nCores=nChains,
                    nIts = 100000, thinningFreq = 10,
                    saveClusterParams=TRUE, saveLatentObs=FALSE,
                    quiet=TRUE, scaleData=FALSE) {
@@ -102,7 +110,6 @@ DPMUnc <- function(obsData,obsVars,saveFileDir,seed,
   if(is.vector(obsVars))
     obsVars=matrix(obsVars,ncol=1)
 
-  set.seed(seed, sample.kind="Rejection", normal.kind="Inversion", kind="Mersenne-Twister")
 
   if (scaleData) {
       scaled <- scale_data(obsData, obsVars)
@@ -110,18 +117,45 @@ DPMUnc <- function(obsData,obsVars,saveFileDir,seed,
       obsVars <- scaled$vars
   }
 
-  # start in an odd place. convergence longer, but avoids getting stuck in kmeans solution
   kmeansInit             <- kmeans(obsData, centers = K)
-  currentAllocations     <- sample(kmeansInit$cluster)
 
-  runDPMUnc(obsData, obsVars,
-            nIts, thinningFreq, quiet,
-            saveClusterParams, saveLatentObs,
-            saveFileDir,
-            currentAllocations,
-            kappa0,
-            alpha0,
-            beta0)
+  if(!file.exists(saveFileDir))
+    dir.create(saveFileDir)
+  seeds=seq(seed,seed+nChains-1)
+
+   # Construct cluster
+  cl = parallel::makeCluster(nCores)
+
+  # After the function is run, shutdown the cluster.
+  on.exit(parallel::stopCluster(cl))
+
+  # Register parallel backend
+  doParallel::registerDoParallel(cl)   # Modify with any do*::registerDo*()
+
+  # Compute estimates
+  estimates = foreach::foreach(s = seeds, # Perform n simulations
+                               .packages = "DPMUnc") %dopar% {
+    ## skip if overlapping any previous runs
+    seedDir=file.path(saveFileDir,s)
+    if(file.exists(seedDir)) {
+      warning("output dir exists, skipping: ", seedDir)
+      return(NULL)
+    } else {
+      dir.create(seedDir)
+    }
+    ## otherwise, set seed
+                                 set.seed(s, sample.kind="Rejection", normal.kind="Inversion", kind="Mersenne-Twister")
+    ## start in an odd place. convergence longer, but avoids getting stuck in kmeans solution
+    currentAllocations     <- sample(kmeansInit$cluster)
+    runDPMUnc(obsData, obsVars,
+              nIts, thinningFreq, quiet,
+              saveClusterParams, saveLatentObs,
+              seedDir,
+              currentAllocations,
+              kappa0,
+              alpha0,
+              beta0)
+  }
 }
 
 #' experimental_resumeDPMUnc - Resume run of Dirichlet Process Mixture Modeller taking uncertainty of data points into account
@@ -153,8 +187,6 @@ DPMUnc <- function(obsData,obsVars,saveFileDir,seed,
 #' @param scaleData Boolean. If TRUE, data will be scaled so that the variance of every
 #' variable (column) in obsData is 1 (and obsVars will be scaled to fit this rescaling).
 #' Else, the raw data will be used.
-#'
-#' @export
 #'
 #' @examples
 #' n = 50; d = 5; k = 4

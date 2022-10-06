@@ -55,10 +55,23 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// calc_psm
+arma::mat calc_psm(arma::mat X, arma::vec values);
+RcppExport SEXP _DPMUnc_calc_psm(SEXP XSEXP, SEXP valuesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type values(valuesSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_psm(X, values));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_DPMUnc_runDPMUnc", (DL_FUNC) &_DPMUnc_runDPMUnc, 12},
     {"_DPMUnc_resumeDPMUnc", (DL_FUNC) &_DPMUnc_resumeDPMUnc, 14},
+    {"_DPMUnc_calc_psm", (DL_FUNC) &_DPMUnc_calc_psm, 2},
     {NULL, NULL, 0}
 };
 

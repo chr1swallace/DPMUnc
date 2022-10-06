@@ -12,7 +12,14 @@ DPMUnc(
   kappa0,
   alpha0,
   beta0,
-  K = floor(nrow(obsData)/2),
+  K = if (is.vector(obsData)) {
+     floor(length(obsData)/2)
+ } else {
+    
+    floor(nrow(obsData)/2)
+ },
+  nChains = 3,
+  nCores = nChains,
   nIts = 1e+05,
   thinningFreq = 10,
   saveClusterParams = TRUE,
