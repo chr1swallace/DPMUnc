@@ -3,6 +3,7 @@
 #include <math.h>
 #include "ezETAProgressBar.h"
 
+
 // A smaller number corresponds to a more serious and less verbose debug statement
 // So setting VERBOSITY here to a larger number means increasing the number of messages printed
 #ifndef VERBOSITY
@@ -13,10 +14,10 @@
 // assigned verbosity X is less than VERBOSITY
 #define DEBUG(X,Y) \
   if(X <= VERBOSITY) { \
-    std::cerr << "DEBUG " << X << " " \
-              << __FILE__ << "::" << __FUNCTION__ << "::L" << __LINE__ << " "; \
-    do {std::cerr << Y << std::endl;} while(0); \
-  };
+     Rcerr << "DEBUG " << X << " " \
+               << __FILE__ << "::" << __FUNCTION__ << "::L" << __LINE__ << " "; \
+     do {Rcerr << Y << std::endl;} while(0); \
+   };
 
 using namespace Rcpp;
 
@@ -56,11 +57,11 @@ arma::vec colMeans(arma::mat X) {
 
 int random_integer_weighted(arma::vec weights) {
   arma::vec cumSums = arma::cumsum(weights);
-  DEBUG(10, weights.t());
+  // DEBUG(10, weights.t());
   double u = arma::randu() * cumSums[cumSums.n_rows - 1];
-  DEBUG(10, "Random number " << u << " cumSums " << cumSums.t());
+  // DEBUG(10, "Random number " << u << " cumSums " << cumSums.t());
   arma::uvec indices_above_u = arma::find(cumSums > u);
-  DEBUG(10, indices_above_u.t());
+  // DEBUG(10, indices_above_u.t());
   int first_above_u = indices_above_u[0];
   return first_above_u;
 }
@@ -106,7 +107,7 @@ arma::uvec shift_cluster_allocations(arma::uvec current, int indexToRemove) {
 double sample_alpha(double a0, double b0, int K, int nObs, double currentAlpha) {
   double newAlpha;
 
-  DEBUG(7, "First sampling eta using currentAlpha " << currentAlpha << " nObs " << nObs);
+  // DEBUG(7, "First sampling eta using currentAlpha " << currentAlpha << " nObs " << nObs);
   // sample a new alpha (see Escobar and West, 1995)
   double eta = rBeta(currentAlpha + 1, nObs);
 
@@ -119,7 +120,7 @@ double sample_alpha(double a0, double b0, int K, int nObs, double currentAlpha) 
 
   double scale = 1 / ((double) b0 - log(eta));
 
-  DEBUG(5, "Sampling alpha A " << A << " B " << B << " pi_eta " << pi_eta << " scale "  << scale << " nObs " << nObs << " eta " << eta);
+  // DEBUG(5, "Sampling alpha A " << A << " B " << B << " pi_eta " << pi_eta << " scale "  << scale << " nObs " << nObs << " eta " << eta);
 
   if (arma::randu() < pi_eta) {
     newAlpha = arma::randg( arma::distr_param(a0 + K, scale) );
@@ -260,11 +261,11 @@ class Clustering {
     }
 
     void update_logMarginalLikelihood(int k) {
-      DEBUG(7, "Updating log likelihood for cluster " << k);
+      // DEBUG(7, "Updating log likelihood for cluster " << k);
       logMarginalLikelihood[k] = clusterParamPrior->calcLogMarginalLikelihood(nObsInCluster[k],
                                                                               empiricalMeans.row(k).t(),
                                                                               empiricalRSS.row(k).t());
-      DEBUG(7, "Updated log likelihood for cluster " << k);
+      // DEBUG(7, "Updated log likelihood for cluster " << k);
     }
 
     void update_cluster(int k,
@@ -558,14 +559,14 @@ class MixtureModeller {
 
       clusterAllocations[i] = r_newCluster;
       if (newCluster == K) {
-        DEBUG(4, "Adding singleton cluster with observation " << i );
+        // DEBUG(4, "Adding singleton cluster with observation " << i );
         currentClustering.add_singleton_cluster(observation);
       } else {
-        DEBUG(4, "Adding observation " << i << " to cluster " << newCluster);
+        // DEBUG(4, "Adding observation " << i << " to cluster " << newCluster);
         currentClustering.add_observation_to_cluster(newCluster, observation);
       }
 
-      DEBUG(4, "Removing observation " << i << " from cluster " << oldCluster);
+      // DEBUG(4, "Removing observation " << i << " from cluster " << oldCluster);
       currentClustering.remove_observation_from_cluster(oldCluster, observation);
 
       if (currentClustering.getNObsInCluster(oldCluster) == 0) {
@@ -578,9 +579,9 @@ class MixtureModeller {
     double resample_alpha() {
       int K = currentClustering.getK();
       int nObs = observedData.n_rows;
-      DEBUG(7, "Original alpha " << alpha_concentration);
+      // DEBUG(7, "Original alpha " << alpha_concentration);
       alpha_concentration = sample_alpha(a0, b0, K, nObs, alpha_concentration);
-      DEBUG(5, "Resampled alpha " << alpha_concentration);
+      // DEBUG(5, "Resampled alpha " << alpha_concentration);
       return alpha_concentration;
     }
 
@@ -596,13 +597,13 @@ class MixtureModeller {
         NormalGammaDistributionPosterior posterior = clusterParamPrior.calcPosterior(currentClustering.getNObsInCluster(k),
                                                                                      currentClustering.getEmpiricalMeans(k),
                                                                                      currentClustering.getEmpiricalRSS(k));
-        DEBUG(7, " k " << k << "\n" << posterior.as_str());
+        // DEBUG(7, " k " << k << "\n" << posterior.as_str());
         posterior.sample_from_dist(&newMeans,
                                    &newVars);
         clusterMeans.row(k) = newMeans.t();
         clusterVars.row(k) = newVars.t();
       }
-      DEBUG(7, clusterMeans << "\n" << clusterVars );
+      // DEBUG(7, clusterMeans << "\n" << clusterVars );
     }
 
     void resample_latent_observations() {
@@ -626,20 +627,20 @@ class MixtureModeller {
           sigmasq_n_matrix(i, j) = sigmasq_n2;
         }
       }
-      DEBUG(10, mu_n_matrix << "\n" << sigmasq_n_matrix);
+      // DEBUG(10, mu_n_matrix << "\n" << sigmasq_n_matrix);
 
       latentObservations = sample_normal_mat(mu_n_matrix, sigmasq_n_matrix);
     }
 
     void calculateClusterStats() {
       arma::mat dataPoints = latentObservations;
-      DEBUG(7, "before\n" << currentClustering.as_str());
-      DEBUG(7, "data points\n" << dataPoints);
+      // DEBUG(7, "before\n" << currentClustering.as_str());
+      // DEBUG(7, "data points\n" << dataPoints);
       Clustering current(&(clusterParamPrior),
                          clusterAllocations,
                          dataPoints);
       currentClustering = current;
-      DEBUG(7, "after\n" << currentClustering.as_str());
+      // DEBUG(7, "after\n" << currentClustering.as_str());
     }
 
     void print_update(int iterations) {
@@ -664,17 +665,17 @@ class MixtureModeller {
 
     arma::vec calc_allocation_probs(arma::vec observation,
                                     int r_currentAlloc) {
-      DEBUG(7, "alpha " << alpha_concentration);
+      // DEBUG(7, "alpha " << alpha_concentration);
       int currentAlloc = r_currentAlloc - 1;
 
-      DEBUG(7, currentClustering.as_str());
+      // DEBUG(7, currentClustering.as_str());
       clusteringExcludingObs = currentClustering;
       clusteringExcludingObs.remove_observation_from_cluster(currentAlloc, observation);
-      DEBUG(7, "excluding obs\n" << clusteringExcludingObs.as_str());
+      // DEBUG(7, "excluding obs\n" << clusteringExcludingObs.as_str());
 
       clusteringWithObsInEveryCluster = clusteringExcludingObs;
       clusteringWithObsInEveryCluster.add_observation_to_every_cluster(observation);
-      DEBUG(7, "obs in every\n" << clusteringWithObsInEveryCluster.as_str());
+      // DEBUG(7, "obs in every\n" << clusteringWithObsInEveryCluster.as_str());
 
       int K = clusteringWithObsInEveryCluster.getK();
       arma::vec logMarginalLikelihoodObs(K + 1);
@@ -682,7 +683,7 @@ class MixtureModeller {
 
       arma::vec logMarginalLikelihoodObsOverPosterior = clusteringWithObsInEveryCluster.getLogMarginalLikelihood() - \
                                                         clusteringExcludingObs.getLogMarginalLikelihood();
-      DEBUG(7, "logMarginalLikelihoodObsOverPosterior\n" << logMarginalLikelihoodObsOverPosterior.t());
+      // DEBUG(7, "logMarginalLikelihoodObsOverPosterior\n" << logMarginalLikelihoodObsOverPosterior.t());
       logMarginalLikelihoodObs.head_rows(K) = logMarginalLikelihoodObsOverPosterior;
       logMarginalLikelihoodObs[K] = clusterParamPrior.calcLogMarginalLikelihoodSingleton(observation);
 
@@ -692,7 +693,7 @@ class MixtureModeller {
       // Adjust by this constant factor to keep values in a more normal range
       double constant_factor = arma::max(logMarginalLikelihoodObs);
       arma::vec clusterProbs = clusterSizeWeights % arma::exp(logMarginalLikelihoodObs - constant_factor);
-      DEBUG(5, "Cluster probs\n" << clusterProbs.t());
+      // DEBUG(5, "Cluster probs\n" << clusterProbs.t());
       clusterProbs = arma::normalise(clusterProbs);
 
       return clusterProbs;
@@ -702,10 +703,10 @@ class MixtureModeller {
                                     int r_oldCluster,
                                     int r_newCluster,
                                     arma::vec observation) {
-      DEBUG(4, "Attempting move from (R indexing) " << r_oldCluster << " to " << r_newCluster << " of obs " << i);
-      DEBUG(7, "before\n" << currentClustering.as_str());
+      // DEBUG(4, "Attempting move from (R indexing) " << r_oldCluster << " to " << r_newCluster << " of obs " << i);
+      // DEBUG(7, "before\n" << currentClustering.as_str());
       move_observation(i, r_oldCluster, r_newCluster, observation);
-      DEBUG(7, "after\n" << currentClustering.as_str());
+      // DEBUG(7, "after\n" << currentClustering.as_str());
     }
 
     void resample_allocations() {
@@ -820,7 +821,7 @@ void runDPMUnc(arma::mat observedData,
                double kappa0,
                double alpha0,
                double beta0) {
-  DEBUG(4, "Initialised modeller with data\n" << observedData)
+  // DEBUG(4, "Initialised modeller with data\n" << observedData)
   arma::mat latentObservations = observedData;
   double alpha_concentration = 1;
   MixtureModeller(observedData,
@@ -881,10 +882,10 @@ void resumeDPMUnc(arma::mat observedData,
                   double kappa0,
                   double alpha0,
                   double beta0) {
-  DEBUG(4, "Reinitialised modeller with data\n" << observedData)
-  DEBUG(4, "Latent obs at resumption\n" << latentObservations)
-  DEBUG(4, "Cluster allocations at resumption\n" << clusterAllocations)
-  DEBUG(4, "Alpha at resumption\n" << alpha_concentration)
+  // DEBUG(4, "Reinitialised modeller with data\n" << observedData)
+  // DEBUG(4, "Latent obs at resumption\n" << latentObservations)
+  // DEBUG(4, "Cluster allocations at resumption\n" << clusterAllocations)
+  // DEBUG(4, "Alpha at resumption\n" << alpha_concentration)
   MixtureModeller(observedData,
                   observedVars,
                   remainingIterations,
