@@ -32,6 +32,8 @@ calc_psmC=function(x) {
 get_psm=function(saveFileDir, trim=.5) {
   if(!file.exists(saveFileDir))
     stop("saveFileDir not found: ",saveFileDir)
+  if(!length(list.files(saveFileDir)))
+    stop("saveFileDir empty: ",saveFileDir)
   ## is this a single dir or a dir of seeds?
   if(is_seed_dir(saveFileDir)) {
     allocs= lapply(list.files(saveFileDir, full.name=TRUE), function(f) {
