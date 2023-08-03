@@ -1,4 +1,20 @@
-url: ~
+url: https://chr1swallace.github.io/DPMUnc
 template:
   bootstrap: 5
-
+  params:
+    bootswatch: simplex
+news:
+articles:
+- title: Vignettes
+  navbar: ~
+  contents:
+  - DPMUnc
+reference:
+  - title: Reference
+    contents:
+      - '`DPMUnc`'
+      - '`experimental_resumeDPMUnc`'
+      - '`get_psm`'
+      - '`read_mcmc`'
+      - '`read_samples`'
+      - '`scale_data`'
