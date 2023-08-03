@@ -1,3 +1,5 @@
+utils::globalVariables(".")
+
 ## calc_psmR=function(x) {
 ##   unq=unique(as.vector(x)) %>% setdiff(.,NA)
 ##   ## print(unq)
@@ -25,7 +27,7 @@ calc_psmC=function(x) {
 ##' @title Posterior Similarity Matrix
 ##' @param saveFileDir directory containing result of a DPMUnc run
 ##' @param trim proportion of initial samples to discard (burn in)
-##' @return matrix with entries in [0,1] indicating the proportion of times each
+##' @return matrix with entries in \[0,1\] indicating the proportion of times each
 ##'   pair of observations were in the same cluster
 ##' @export
 ##' @author Chris Wallace
@@ -36,7 +38,7 @@ get_psm=function(saveFileDir, trim=.5) {
     stop("saveFileDir empty: ",saveFileDir)
   ## is this a single dir or a dir of seeds?
   if(is_seed_dir(saveFileDir)) {
-    allocs= lapply(list.files(saveFileDir, full.name=TRUE), function(f) {
+    allocs= lapply(list.files(saveFileDir, full.names=TRUE), function(f) {
       read.table(file.path(f,"clusterAllocations.csv"),sep=",") %>%
         as.matrix() %>%
         tail(., floor((1-trim) * nrow(.)))
@@ -53,24 +55,29 @@ get_psm=function(saveFileDir, trim=.5) {
 ##' Reads in samples and stores as an mcmc.list compatible with the coda library.
 ##'
 ##' This means output can be processed using using any coda function
+##' The function ‘mcmc’ is used to create a Markov Chain Monte Carlo
+##' object.  The input data are taken to be a vector, or a matrix with
+##' one column per variable.
 ##'
 ##' @title Read in MCMC output
 ##' @param saveFileDir a character vector of directories, each corresponding to
 ##'   a single chain from the analysis of the same data
+##' @param burnin what fraction of each chain to discard as burnin or number of obs to discard
 ##' @return an mcmc.list
-##' @export
 ##' @author Chris Wallace
-read_mcmc <- function(saveFileDir) {
-  ## The function ‘mcmc’ is used to create a Markov Chain Monte Carlo
-  ##   object.  The input data are taken to be a vector, or a matrix with
-  ##   one column per variable.
+read_mcmc <- function(saveFileDir, burnin) {
   filenames=c("alpha.csv","K.csv","pLatentsGivenClusters.csv")
   data=lapply(saveFileDir, function(thisDir) {
     this_data=lapply(filenames, function(f) {
       scan(file.path(thisDir,f), what="", sep=",") %>% as.numeric()
     }) %>% do.call("cbind",.)
     colnames(this_data)=sub(".csv","",filenames)
-    mcmc(tail(this_data, floor(nrow(this_data)/2)))
+    ntail=if(burnin < 1) { (1-burnin) * nrow(this_data) } else { nrow(this_data) - burnin }
+    if(ntail < 1) {
+        warning("burnin larger than number of samples. setting burnin to 0.5")
+        ntail = .5 * nrow(this_data)
+    }
+    mcmc(tail(this_data, ntail))
   }) %>% as.mcmc.list()
 }
 
@@ -85,18 +92,19 @@ is_seed_dir <- function(f)
 ##' @param saveFileDir character vector of directories, either one directory per
 ##'   chain run on the same data, or the "container" directory, holding one
 ##'   subdirectory per chain which will be automatically found and read
+##' @param burnin fraction of each chain to discard as burnin (if 0 < burnin < 1) or number of observations to discard
 ##' @return mcmc.list of samples, compatible with coda library
 ##' @author Chris Wallace
 ##' @export
-read_samples <- function(saveFileDir) {
+read_samples <- function(saveFileDir, burnin=.5) {
   ok=sapply(saveFileDir, file.exists)
   if(any(!ok))
     stop("directories not found: ", paste(saveFileDir[!ok], collapse=" "))
   ## is this a single directory or a directory of seeds?
   if(is_seed_dir(saveFileDir))
-    read_samples(saveFileDir=list.files(saveFileDir,full.names=TRUE))
+    read_samples(saveFileDir=list.files(saveFileDir,full.names=TRUE), burnin)
   else
-    read_mcmc(saveFileDir)
+    read_mcmc(saveFileDir, burnin)
   ## list(quant_alpha = calculate_quantiles(saveFileDir, "alpha.csv", ...),
   ##        quant_K = calculate_quantiles(saveFileDir, "K.csv", ...),
   ##        quant_latent = calculate_quantiles(saveFileDir, "pLatentsGivenClusters.csv", ...))

@@ -75,8 +75,8 @@ obsVars = matrix(rchisq(n*d,1), n, d)
 obsData = matrix(rnorm(n*d, mean=as.vector(true_means), sd=sqrt(as.vector(obsVars))), n, d)
 # The hyperparameters should be carefully checked against the data.
 alpha0 = 2; beta0 = 0.2 * mean(apply(obsData, 2, var)); kappa0 = 0.5
-DPMUnc(obsData, obsVars, "test_output", 1234,
-       kappa0=kappa0, alpha0=alpha0, beta0=beta0, nIts=10000)
-experimental_resumeDPMUnc(obsData, obsVars, "test_output", 1234,
-                          kappa0=kappa0, alpha0=alpha0, beta0=beta0, nIts=100000)
+#DPMUnc(obsData, obsVars, "test_output", 1234,
+#       kappa0=kappa0, alpha0=alpha0, beta0=beta0, nIts=10000)
+#experimental_resumeDPMUnc(obsData, obsVars, "test_output", 1234,
+#                          kappa0=kappa0, alpha0=alpha0, beta0=beta0, nIts=100000)
 }

@@ -10,6 +10,8 @@ resumeDPMUnc <- function(observedData, observedVars, remainingIterations, thinni
 }
 
 #' @export
+NULL
+
 calc_psm <- function(X, values) {
     .Call('_DPMUnc_calc_psm', PACKAGE = 'DPMUnc', X, values)
 }

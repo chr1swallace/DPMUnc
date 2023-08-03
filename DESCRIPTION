@@ -1,7 +1,7 @@
 Package: DPMUnc
 Title: Dirichlet Process Mixture Modeller Taking Uncertainty into Account
-Version: 0.0.0.9000
-Maintainer: Kath Nicholls <kcn25@cam.ac.uk>
+Version: 1.0.0
+Maintainer: Chris Wallace <cew54@cam.ac.uk>
 Author: c(
     person("Kath", "Nicholls", email = "kcn25@cam.ac.uk", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-4070-1317")),
     person("Chris", "Wallace", role = "aut", email = "cew54@cam.ac.uk", comment = c(ORCID = "0000-0001-9755-1703")),
@@ -18,4 +18,15 @@ Imports:
     doParallel,
     Rcpp (>= 1.0.8) ,
     foreach,
-    parallel
+    parallel,
+    coda,
+    iterators,
+    magrittr,
+    stats,
+    utils
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr

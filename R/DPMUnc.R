@@ -1,15 +1,18 @@
-#!/usr/bin/Rscript
-
 #' @importFrom foreach %dopar% foreach
 #' @importFrom iterators icount
 #' @importFrom doParallel registerDoParallel
 #' @useDynLib DPMUnc
 #' @importFrom Rcpp evalCpp
 #' @importFrom coda mcmc as.mcmc.list
+#' @importFrom stats kmeans
+#' @importFrom utils read.table tail
+#' @importFrom magrittr %>%
 NULL
 
+utils::globalVariables("s")
+
 read_line_n <- function(filepath, nDim, n) {
-  values = as.numeric(read.table(filepath, skip=n-1, nrow=1, sep=','))
+  values = as.numeric(read.table(filepath, skip=n-1, nrows=1, sep=','))
   mat = matrix(values, ncol=nDim)
   return (mat)
 }
@@ -60,6 +63,8 @@ scale_data <- function(obsData, obsVars) {
 #' @param alpha0 Hyperparameter for Normal-Gamma prior on cluster parameters
 #' @param beta0 Hyperparameter for Normal-Gamma prior on cluster parameters
 #' @param K Initial number of clusters.
+#' @param nChains number of parallel chains (default 3)
+#' @param nCores number of cores to use running in parallel (default nChains)
 #' @param nIts Total number of iterations to run. The user should check they are happy
 #' that the model has converged before using any of the results.
 #' @param thinningFreq Controls how many samples are saved. E.g. a value of 10 means
@@ -91,8 +96,11 @@ scale_data <- function(obsData, obsVars) {
 #' obsData = matrix(rnorm(n*d, mean=as.vector(true_means), sd=sqrt(as.vector(obsVars))), n, d)
 #' # The hyperparameters should be carefully checked against the data.
 #' alpha0 = 2; beta0 = 0.2 * mean(apply(obsData, 2, var)); kappa0 = 0.5
-#' DPMUnc(obsData, obsVars, "test_output", 1234,
+#' td=file.path(tempdir(), "DPMUnc")
+#' DPMUnc(obsData, obsVars, saveFileDir=td, 1234, nChains=1, nCores=1,
 #'        kappa0=kappa0, alpha0=alpha0, beta0=beta0)
+#' list.files(td)
+#' unlink(td, recursive=TRUE)
 DPMUnc <- function(obsData,obsVars,saveFileDir,seed,
                    kappa0, alpha0, beta0,
                    K=if(is.vector(obsData)) { floor(length(obsData)/2) } else { floor(nrow(obsData)/2) },
@@ -109,7 +117,6 @@ DPMUnc <- function(obsData,obsVars,saveFileDir,seed,
     obsData=matrix(obsData,ncol=1)
   if(is.vector(obsVars))
     obsVars=matrix(obsVars,ncol=1)
-
 
   if (scaleData) {
       scaled <- scale_data(obsData, obsVars)
@@ -197,10 +204,10 @@ DPMUnc <- function(obsData,obsVars,saveFileDir,seed,
 #' obsData = matrix(rnorm(n*d, mean=as.vector(true_means), sd=sqrt(as.vector(obsVars))), n, d)
 #' # The hyperparameters should be carefully checked against the data.
 #' alpha0 = 2; beta0 = 0.2 * mean(apply(obsData, 2, var)); kappa0 = 0.5
-#' DPMUnc(obsData, obsVars, "test_output", 1234,
-#'        kappa0=kappa0, alpha0=alpha0, beta0=beta0, nIts=10000)
-#' experimental_resumeDPMUnc(obsData, obsVars, "test_output", 1234,
-#'                           kappa0=kappa0, alpha0=alpha0, beta0=beta0, nIts=100000)
+#' #DPMUnc(obsData, obsVars, "test_output", 1234,
+#' #       kappa0=kappa0, alpha0=alpha0, beta0=beta0, nIts=10000)
+#' #experimental_resumeDPMUnc(obsData, obsVars, "test_output", 1234,
+#' #                          kappa0=kappa0, alpha0=alpha0, beta0=beta0, nIts=100000)
 experimental_resumeDPMUnc <- function(obsData,obsVars,saveFileDir,seed,
                                       kappa0, alpha0, beta0,
                                       K=floor(nrow(obsData)/2), nIts = 100000, thinningFreq = 10,

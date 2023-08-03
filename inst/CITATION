@@ -1,0 +1,7 @@
+bibentry(
+  bibtype  = "Article",
+	title = "Bayesian clustering with uncertain data",
+	author = "Kath Nicholls and Paul D W Kirk and Chris Wallace",
+	journal = "bioRxiv",
+	year = "2022"
+)

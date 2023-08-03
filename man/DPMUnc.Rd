@@ -45,6 +45,10 @@ DPMUnc(
 
 \item{K}{Initial number of clusters.}
 
+\item{nChains}{number of parallel chains (default 3)}
+
+\item{nCores}{number of cores to use running in parallel (default nChains)}
+
 \item{nIts}{Total number of iterations to run. The user should check they are happy
 that the model has converged before using any of the results.}
 
@@ -82,6 +86,9 @@ obsVars = matrix(rchisq(n*d,1), n, d)
 obsData = matrix(rnorm(n*d, mean=as.vector(true_means), sd=sqrt(as.vector(obsVars))), n, d)
 # The hyperparameters should be carefully checked against the data.
 alpha0 = 2; beta0 = 0.2 * mean(apply(obsData, 2, var)); kappa0 = 0.5
-DPMUnc(obsData, obsVars, "test_output", 1234,
+td=file.path(tempdir(), "DPMUnc")
+DPMUnc(obsData, obsVars, saveFileDir=td, 1234, nChains=1, nCores=1,
        kappa0=kappa0, alpha0=alpha0, beta0=beta0)
+list.files(td)
+unlink(td, recursive=TRUE)
 }

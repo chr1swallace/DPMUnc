@@ -4,11 +4,13 @@
 \alias{read_mcmc}
 \title{Read in MCMC output}
 \usage{
-read_mcmc(saveFileDir)
+read_mcmc(saveFileDir, burnin)
 }
 \arguments{
 \item{saveFileDir}{a character vector of directories, each corresponding to
 a single chain from the analysis of the same data}
+
+\item{burnin}{what fraction of each chain to discard as burnin or number of obs to discard}
 }
 \value{
 an mcmc.list
@@ -18,6 +20,9 @@ Reads in samples and stores as an mcmc.list compatible with the coda library.
 }
 \details{
 This means output can be processed using using any coda function
+The function ‘mcmc’ is used to create a Markov Chain Monte Carlo
+object.  The input data are taken to be a vector, or a matrix with
+one column per variable.
 }
 \author{
 Chris Wallace

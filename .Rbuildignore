@@ -1,2 +1,10 @@
 ^LICENSE\.md$
 ^\.github$
+^\.circleci$
+^environment.yml$
+^install_dependencies.sh$
+^doc$
+^Meta$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

@@ -7,7 +7,7 @@
 // A smaller number corresponds to a more serious and less verbose debug statement
 // So setting VERBOSITY here to a larger number means increasing the number of messages printed
 #ifndef VERBOSITY
-#  define VERBOSITY 3
+#  define VERBOSITY 0
 #endif
 
 // DEBUG macro which prints line info etc. and will only be printed if the
@@ -513,7 +513,36 @@ class MixtureModellerOutputter {
 };
 
 class MixtureModeller {
-  private:
+  public:
+    MixtureModeller(arma::mat observedData,
+                    arma::mat observedVars,
+                    int totalIterations,
+                    int thinningFreq,
+                    bool quiet,
+                    bool saveClusterParams,
+                    bool saveLatentObs,
+                    std::string outputDir,
+                    arma::uvec clusterAllocations,
+                    arma::mat latentObservations,
+                    double alpha_concentration,
+                    double kappa0,
+                    double alpha0,
+                    double beta0)
+        : observedData(observedData), observedVars(observedVars),
+          latentObservations(latentObservations),
+          clusterAllocations(clusterAllocations),
+          a0(3), b0(4),
+          outputter(totalIterations, thinningFreq, quiet, saveClusterParams, saveLatentObs, outputDir),
+          clusterParamPrior(kappa0, alpha0, beta0, colMeans(observedData)),
+          currentClustering(&clusterParamPrior, clusterAllocations, observedData),
+          clusteringExcludingObs(&clusterParamPrior, clusterAllocations, observedData),
+          clusteringWithObsInEveryCluster(&clusterParamPrior, clusterAllocations, observedData),
+          alpha_concentration(alpha_concentration) {
+      calculateClusterStats();
+      run_iterations(totalIterations);
+    }
+
+private:
     arma::mat observedData, observedVars;
     // Priors for alpha (Escobar and West)
     double a0, b0;
@@ -753,34 +782,6 @@ class MixtureModeller {
       }
     }
 
-  public:
-    MixtureModeller(arma::mat observedData,
-                    arma::mat observedVars,
-                    int totalIterations,
-                    int thinningFreq,
-                    bool quiet,
-                    bool saveClusterParams,
-                    bool saveLatentObs,
-                    std::string outputDir,
-                    arma::uvec clusterAllocations,
-                    arma::mat latentObservations,
-                    double alpha_concentration,
-                    double kappa0,
-                    double alpha0,
-                    double beta0)
-        : observedData(observedData), observedVars(observedVars),
-          latentObservations(latentObservations),
-          clusterAllocations(clusterAllocations),
-          a0(3), b0(4),
-          outputter(totalIterations, thinningFreq, quiet, saveClusterParams, saveLatentObs, outputDir),
-          clusterParamPrior(kappa0, alpha0, beta0, colMeans(observedData)),
-          currentClustering(&clusterParamPrior, clusterAllocations, observedData),
-          clusteringExcludingObs(&clusterParamPrior, clusterAllocations, observedData),
-          clusteringWithObsInEveryCluster(&clusterParamPrior, clusterAllocations, observedData),
-          alpha_concentration(alpha_concentration) {
-      calculateClusterStats();
-      run_iterations(totalIterations);
-    }
 
 };
 

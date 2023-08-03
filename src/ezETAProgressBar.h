@@ -71,22 +71,22 @@ public:
 		std::string out;
 		
 		if (days) {
-			sprintf(tmp, "%dd ", days);
+		  snprintf(tmp, sizeof(tmp), "%dd ", days);
 			out += tmp;
 		}
 		
 		if (hours >= 1) {
-			sprintf(tmp, "%dh ", hours);
+		  snprintf(tmp, sizeof(tmp), "%dh ", hours);
 			out += tmp;
 		}
 
 		if (mins >= 1) {
-			sprintf(tmp, "%dm ", mins);
+			snprintf(tmp, sizeof(tmp), "%dm ", mins);
 			out += tmp;
 		}
 		
 		if (sec >= 1) {
-			sprintf(tmp, "%ds", (int)sec);
+			snprintf(tmp, sizeof(tmp), "%ds", (int)sec);
 			out += tmp;
 		}
 		
@@ -100,7 +100,7 @@ public:
 	void setPct(float Pct) {
 		endTime = osQueryPerfomance();
 		char pctstr[5];
-		sprintf(pctstr, "%3d%%", (int)(100*Pct));
+		snprintf(pctstr, sizeof(pctstr), "%3d%%", (int)(100*Pct));
 		// Compute how many tics we can display.
 		int nticsMax = (width-27);
 		int ntics = (int)(nticsMax*Pct);
@@ -121,7 +121,7 @@ public:
 				out.append(width-out.size(),' ');
 
 			out.append("\n");
-			std::cout << out;
+			Rcpp::Rcout << out;
 			return;
 		} else {
 			float eta=999999.;
@@ -141,8 +141,8 @@ public:
 			out.append(width-out.size(),' ');
 			
 		out.append("\r");
-		std::cout << out;
-		std::cout.flush();
+		Rcpp::Rcout << out;
+		Rcpp::Rcout.flush();
 	}
 
 	unsigned int n;

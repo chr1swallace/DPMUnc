@@ -12,7 +12,7 @@ get_psm(saveFileDir, trim = 0.5)
 \item{trim}{proportion of initial samples to discard (burn in)}
 }
 \value{
-matrix with entries in \link{0,1} indicating the proportion of times each
+matrix with entries in [0,1] indicating the proportion of times each
 pair of observations were in the same cluster
 }
 \description{

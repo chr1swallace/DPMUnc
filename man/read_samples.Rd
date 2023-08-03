@@ -4,12 +4,14 @@
 \alias{read_samples}
 \title{Read samples}
 \usage{
-read_samples(saveFileDir)
+read_samples(saveFileDir, burnin = 0.5)
 }
 \arguments{
 \item{saveFileDir}{character vector of directories, either one directory per
 chain run on the same data, or the "container" directory, holding one
 subdirectory per chain which will be automatically found and read}
+
+\item{burnin}{fraction of each chain to discard as burnin (if 0 < burnin < 1) or number of observations to discard}
 }
 \value{
 mcmc.list of samples, compatible with coda library
