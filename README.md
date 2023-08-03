@@ -1,3 +1,4 @@
+# pkgdown <img src="man/figures/logo.png" align="right" />
 # DPMUnc
 
 Dirichlet Process Mixture Modeller taking Uncertainty of points into account during clustering.

@@ -89,7 +89,8 @@ heatmap(psm,
         xlab="samples",
         labRow=classes,
         labCol=classes)
-clusters=mcclust::maxpear(psm)
+library(mcclust)
+clusters=maxpear(psm)
 table(inferred=clusters$cl, truth=classes)
 ```
 
