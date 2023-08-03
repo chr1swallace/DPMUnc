@@ -10,11 +10,15 @@ articles:
   contents:
   - DPMUnc
 reference:
-  - title: Reference
+  - title: Main functions
+    desc: run DPMUnc, load the mcmc samples, and load the posterior similarity matrix
     contents:
       - '`DPMUnc`'
-      - '`experimental_resumeDPMUnc`'
-      - '`get_psm`'
-      - '`read_mcmc`'
       - '`read_samples`'
+      - '`get_psm`'
+  - title: Others
+    desc: included for completeness, but the main functions you need should be in the sections above
+    contents:
+      - '`experimental_resumeDPMUnc`'
+      - '`read_mcmc`'
       - '`scale_data`'
