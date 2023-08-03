@@ -1,6 +1,6 @@
 # DPMUnc
 
-<img src="man/figures/logo.png" align="right" />
+<img src="man/figures/logo30.png" align="right" />
 
 Dirichlet Process Mixture Modeller taking Uncertainty of points into account during clustering.
 
